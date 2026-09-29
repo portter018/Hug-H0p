@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>จัดการคิว | Hug & H0p Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="Admin-styles.css">
+</head>
+<body>
+
+  <div class="shell">
+
+    <aside class="sidebar">
+      <div class="sidebar__brand">
+        <span>Hug &amp; </span><span class="sidebar__brand--accent">H0p</span>
+      </div>
+      <nav class="sidebar__nav">
+        <a href="#" class="is-active">
+          <span class="sidebar__icon">☰</span> จัดการคิว
+        </a>
+        <a href="#">
+          <span class="sidebar__icon">◐</span> ลูกค้าและสัตว์เลี้ยง
+        </a>
+        <a href="#">
+          <span class="sidebar__icon">฿</span> การชำระเงิน
+        </a>
+      </nav>
+      <div class="sidebar__user">
+        <div class="sidebar__avatar" id="userAvatar">A</div>
+        <div>
+          <p class="sidebar__name" id="userName">กำลังโหลด…</p>
+          <p class="sidebar__role"><a href="#" id="logoutBtn">ออกจากระบบ</a></p>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+
+      <header class="main__header">
+        <div>
+          <p class="main__eyebrow">ภาพรวมวันนี้</p>
+          <h1 class="main__title" id="dateTitle">—</h1>
+        </div>
+        <div class="date-nav">
+          <button class="date-nav__btn" id="prevDay" aria-label="วันก่อนหน้า">‹</button>
+          <input type="date" id="dateInput">
+          <button class="date-nav__btn" id="nextDay" aria-label="วันถัดไป">›</button>
+        </div>
+      </header>
+
+      <section class="stat-row" id="statRow"></section>
+
+      <section class="board">
+
+        <div class="board__toolbar">
+          <div class="filter-tabs" id="filterTabs">
+            <button class="filter-tab is-active" data-filter="all">ทั้งหมด</button>
+            <button class="filter-tab" data-filter="pending">รอยืนยัน</button>
+            <button class="filter-tab" data-filter="confirmed">ยืนยันแล้ว</button>
+            <button class="filter-tab" data-filter="inservice">กำลังให้บริการ</button>
+            <button class="filter-tab" data-filter="done">เสร็จสิ้น</button>
+            <button class="filter-tab" data-filter="cancelled">ยกเลิก</button>
+          </div>
+        </div>
+
+        <table class="queue-table">
+          <thead>
+            <tr>
+              <th>เวลา</th>
+              <th>ลูกค้า / สัตว์เลี้ยง</th>
+              <th>บริการ</th>
+              <th>สถานะ</th>
+              <th class="queue-table__action-col"></th>
+            </tr>
+          </thead>
+          <tbody id="queueBody"></tbody>
+        </table>
+
+        <p class="board__empty" id="boardEmpty" hidden>ไม่มีรายการในหมวดนี้</p>
+
+      </section>
+
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script src="config.js"></script>
+  <script src="Admin-script.js"></script>
+</body>
+</html>

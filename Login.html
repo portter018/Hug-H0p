@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>เข้าสู่ระบบ | Hug & H0p</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;min-height:100vh;display:grid;place-items:center;font-family:Inter,sans-serif;background:#f6f3ee;color:#222}
+  .card{width:min(380px,92vw);background:#fff;border-radius:16px;padding:32px;box-shadow:0 8px 30px rgba(0,0,0,.08)}
+  h1{font-family:Fraunces,serif;font-size:28px;margin:0 0 20px}
+  .tabs{display:flex;gap:8px;margin-bottom:20px}
+  .tabs button{flex:1;padding:10px;border:1px solid #ddd;background:#fff;border-radius:10px;cursor:pointer;font:inherit}
+  .tabs .on{background:#222;color:#fff;border-color:#222}
+  input{width:100%;box-sizing:border-box;padding:11px 12px;margin-bottom:12px;border:1px solid #ddd;border-radius:10px;font:inherit}
+  .go{width:100%;padding:12px;border:0;border-radius:10px;background:#222;color:#fff;font:600 15px Inter;cursor:pointer}
+  #msg{min-height:20px;margin:10px 0 0;font-size:14px;color:#b3261e}
+  [hidden]{display:none}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Hug &amp; H0p</h1>
+  <div class="tabs">
+    <button id="tabLogin" class="on">เข้าสู่ระบบ</button>
+    <button id="tabReg">สมัครสมาชิก</button>
+  </div>
+  <div id="regFields" hidden>
+    <input id="username" placeholder="ชื่อผู้ใช้ เช่น namfon99" maxlength="20">
+    <input id="phone" placeholder="เบอร์โทร เช่น 0995445841" inputmode="tel" maxlength="10">
+  </div>
+  <input id="identifier" type="text" placeholder="อีเมล" autocomplete="username">
+  <input id="password" type="password" placeholder="รหัสผ่าน (อย่างน้อย 6 ตัว)" autocomplete="current-password">
+  <button class="go" id="submitBtn">เข้าสู่ระบบ</button>
+  <p id="msg"></p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script>
+let mode = 'login';
+const $ = id => document.getElementById(id);
+function setMode(m){
+  mode = m;
+  $('regFields').hidden = m !== 'register';
+  $('tabLogin').classList.toggle('on', m === 'login');
+  $('tabReg').classList.toggle('on', m === 'register');
+  $('submitBtn').textContent = m === 'login' ? 'เข้าสู่ระบบ' : 'สมัครสมาชิก';
+  $('identifier').placeholder = m === 'login' ? 'อีเมล หรือ ชื่อผู้ใช้' : 'อีเมล';
+  $('msg').textContent = '';
+}
+$('tabLogin').onclick = () => setMode('login');
+$('tabReg').onclick = () => setMode('register');
+
+async function redirectByRole(){
+  const { data:{ user } } = await db.auth.getUser();
+  if(!user) return;
+  const { data: p } = await db.from('profiles').select('role').eq('id', user.id).single();
+  location.href = p && p.role === 'admin' ? 'Admin.html' : 'customer.html';
+}
+
+$('submitBtn').onclick = async () => {
+  const identifier = $('identifier').value.trim(), password = $('password').value;
+  $('msg').textContent = '';
+  if(mode === 'register'){
+    const username = $('username').value.trim();
+    const phone = $('phone').value.trim();
+    if(!/^[a-zA-Z0-9_.]{3,20}$/.test(username))
+      return $('msg').textContent = 'ชื่อผู้ใช้ต้องมี 3-20 ตัว ใช้ได้เฉพาะ a-z, 0-9, _ และ .';
+    if(!/^0[0-9]{9}$/.test(phone))
+      return $('msg').textContent = 'เบอร์โทรต้องมี 10 หลัก ขึ้นต้นด้วย 0';
+    if(!identifier.includes('@'))
+      return $('msg').textContent = 'ตอนสมัครต้องใช้อีเมลจริง';
+    const { data, error } = await db.auth.signUp({ email: identifier, password,
+      options:{ data:{ username, phone } } });
+    if(error){
+      if(error.message.includes('duplicate') || error.message.includes('already'))
+        return $('msg').textContent = 'ชื่อผู้ใช้หรืออีเมลนี้มีคนใช้แล้ว';
+      return $('msg').textContent = error.message;
+    }
+    if(!data.session){ $('msg').style.color='#2e7d32'; return $('msg').textContent = 'สมัครแล้ว กรุณายืนยันอีเมล แล้วกลับมาเข้าสู่ระบบ'; }
+  } else {
+    let email = identifier;
+    if(!email.includes('@')){
+      const { data: found, error: lookupErr } = await db.rpc('get_email_by_username', { p_username: identifier });
+      if(lookupErr || !found) return $('msg').textContent = 'ไม่พบชื่อผู้ใช้หรืออีเมลนี้';
+      email = found;
+    }
+    const { error } = await db.auth.signInWithPassword({ email, password });
+    if(error) return $('msg').textContent = 'อีเมล/ชื่อผู้ใช้ หรือรหัสผ่านไม่ถูกต้อง';
+  }
+  redirectByRole();
+};
+db.auth.getSession().then(({data}) => { if(data.session) redirectByRole(); });
+</script>
+</body>
+</html>
